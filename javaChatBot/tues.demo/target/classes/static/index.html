@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+
+    <!-- Prism.js CSS for Syntax Highlighting -->
+    <style>
+        /* Basic styles for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 30px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        /* Chatbox styles */
+        #chatbox {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 600px;
+            margin: 20px auto;
+            height: 400px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+
+        /* Styling the input form */
+        #chatForm {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #message {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Prism.js styles for syntax highlighting */
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        code {
+            color: #f8f8f2;
+        }
+    </style>
+</head>
+<body>
+<h1>Chat with AI</h1>
+<div id="chatbox">
+    <!-- Chat history will appear here -->
+</div>
+<form id="chatForm">
+    <input type="text" id="message" placeholder="Type your message here" required />
+    <button type="submit">Send</button>
+</form>
+
+<!-- Prism.js library (JavaScript) -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+<script>
+    const chatForm = document.getElementById('chatForm');
+    const chatbox = document.getElementById('chatbox');
+    const sessionId = 'user1'; // Replace with a dynamically generated session ID if needed
+
+    // Event listener for the form submission
+    chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userMessage = document.getElementById('message').value;
+
+        // Display the user's message
+        chatbox.innerHTML += `<p><strong>You:</strong> ${escapeHtml(userMessage)}</p>`;
+
+        // Send the message to the chatbot API
+        const response = await fetch(`/api/chat/${sessionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userMessage)
+        });
+        const botReply = await response.text();
+
+        // Format and display the bot's response
+        chatbox.innerHTML += `<p><strong>Bot:</strong> ${formatMessage(botReply)}</p>`;
+
+        // Clear the input field
+        document.getElementById('message').value = '';
+
+        // Scroll to the bottom of the chatbox
+        chatbox.scrollTop = chatbox.scrollHeight;
+    });
+
+    // Function to escape HTML characters for user input
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // Function to format messages, detecting code blocks
+    function formatMessage(message) {
+        // Match triple backticks (code blocks) and format them with <pre><code> tags
+        const codeRegex = /```([\s\S]*?)```/g;
+        const formattedMessage = message.replace(codeRegex, (match, code) => {
+            return `<pre><code class="language-javascript">${escapeHtml(code)}</code></pre>`;
+        });
+        return formattedMessage;
+    }
+</script>
+</body>
+</html>
